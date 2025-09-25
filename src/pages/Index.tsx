@@ -9,8 +9,10 @@ import Footer from "@/components/Footer";
 import FileUpload from "@/components/FileUpload";
 import FilePreview from "@/components/FilePreview";
 import { convertImageToPNG, createZipDownload, generateFileId, preloadSegmentationModel, type ConvertedFile } from "@/utils/imageConverter";
+import { logEvent } from "@/lib/analytics";
 import { useAuth } from "@/context/AuthContext";
 import AuthDialog from "@/components/AuthDialog";
+import { useTranslation } from "react-i18next";
 
 const Index = () => {
   const [files, setFiles] = useState<ConvertedFile[]>([]);
@@ -28,6 +30,7 @@ const Index = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useTranslation();
   // remove local PRO flag (payment disabled for now)
 
   const MAX_DAILY_FREE = 5;
@@ -44,10 +47,11 @@ const Index = () => {
   });
 
   const handleFilesSelected = useCallback(async (selectedFiles: File[]) => {
+    logEvent({ type: 'upload_selected', metadata: { count: selectedFiles.length } });
     if (!user && dailyCount >= MAX_DAILY_FREE) {
       toast({
-        title: "Limite diário atingido",
-        description: `Você já converteu ${MAX_DAILY_FREE} imagens hoje. Volte amanhã ou considere o plano PRO.`,
+        title: t('toasts.limit_reached_title'),
+        description: t('toasts.limit_reached_desc', { max: MAX_DAILY_FREE }),
         variant: "destructive",
       });
       return;
@@ -58,13 +62,14 @@ const Index = () => {
 
     if (!user && filesToProcess.length < selectedFiles.length) {
       toast({
-        title: "Alguns arquivos foram limitados",
-        description: `Apenas ${remainingQuota} conversões restantes hoje.`,
+        title: t('toasts.limited_files_title'),
+        description: t('toasts.limited_files_desc', { remaining: remainingQuota }),
         variant: "destructive",
       });
     }
 
     setIsProcessing(true);
+    logEvent({ type: 'convert_started', metadata: { count: filesToProcess.length } });
 
     const newFiles: ConvertedFile[] = filesToProcess.map(file => ({
       id: generateFileId(),
@@ -109,19 +114,21 @@ const Index = () => {
         );
         
         toast({
-          title: "Erro na conversão",
-          description: `Falha ao converter ${fileData.originalFile.name}`,
+          title: t('toasts.error_conversion_title'),
+          description: t('toasts.error_conversion_desc', { name: fileData.originalFile.name }),
           variant: "destructive",
         });
+        logEvent({ type: 'convert_error', metadata: { name: fileData.originalFile.name } });
       }
     }
 
     setIsProcessing(false);
 
     toast({
-      title: "Conversão concluída!",
-      description: `${filesToProcess.length} imagem(ns) convertida(s) para PNG com remoção de fundo.`,
+      title: t('toasts.conversion_done_title'),
+      description: t('toasts.conversion_done_desc', { count: filesToProcess.length }),
     });
+    logEvent({ type: 'convert_success', metadata: { count: filesToProcess.length } });
   }, [dailyCount, toast]);
 
   const handleRemoveFile = useCallback((id: string) => {
@@ -136,9 +143,10 @@ const Index = () => {
 
   const handleDownloadAll = useCallback(() => {
     createZipDownload(files);
+    logEvent({ type: files.filter(f => f.status === 'completed').length > 1 ? 'download_zip' : 'download_single' });
     toast({
-      title: "Download iniciado",
-      description: "Seus arquivos PNG estão sendo baixados.",
+      title: t('toasts.download_started_title'),
+      description: t('toasts.download_started_desc'),
     });
   }, [files, toast]);
 
@@ -153,34 +161,33 @@ const Index = () => {
         <section className="container mx-auto px-4 py-16 md:py-24">
           <div className="text-center space-y-8 max-w-4xl mx-auto">
             <Badge variant="secondary" className="mb-4">
-              🚀 Conversão instantânea e gratuita
+              🚀 {t('index.hero_badge')}
             </Badge>
             
             <h1 className="text-4xl md:text-6xl font-bold text-foreground">
-              Converta para{" "}
+              {t('index.hero_title_1')}{" "}
               <span className="bg-gradient-primary bg-clip-text text-transparent">
                 PNG
               </span>{" "}
-              em segundos
+              {t('index.hero_title_2')}
             </h1>
             
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Transforme suas imagens em PNG de alta qualidade com remoção automática de fundo usando IA. 
-              Simples, rápido e completamente gratuito.
+              {t('index.hero_desc')}
             </p>
 
             <div className="flex items-center justify-center space-x-4 text-sm text-muted-foreground">
               <div className="flex items-center space-x-2">
                 <Zap className="w-4 h-4 text-primary" />
-                <span>IA + Conversão instantânea</span>
+                <span>{t('index.ia')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Shield className="w-4 h-4 text-primary" />
-                <span>Remoção de fundo automática</span>
+                <span>{t('index.bg')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Download className="w-4 h-4 text-primary" />
-                <span>Download imediato</span>
+                <span>{t('index.dl')}</span>
               </div>
             </div>
           </div>
@@ -191,11 +198,9 @@ const Index = () => {
         <div className="space-y-8 max-w-4xl mx-auto">
           <div className="text-center space-y-4">
             <Badge variant="secondary" className="mb-4 bg-gradient-primary text-primary-foreground">
-              🎯 Nova funcionalidade: Remoção de fundo com IA!
+              🎯 {t('index.new_feature')}
             </Badge>
-            <p className="text-sm text-muted-foreground">
-              Agora todas as conversões incluem remoção automática de fundo usando inteligência artificial
-            </p>
+            <p className="text-sm text-muted-foreground">{t('index.hero_desc')}</p>
           </div>
             {/* Quota indicator */}
             <Card className="p-4 bg-primary/5 border-primary/20">
@@ -208,8 +213,8 @@ const Index = () => {
                     </>
                   ) : (
                     <>
-                      <p className="text-sm font-medium text-foreground">Conversões restantes hoje: {remainingQuota}/{MAX_DAILY_FREE}</p>
-                      <p className="text-xs text-muted-foreground">Plano gratuito - resets às 00:00 UTC</p>
+                      <p className="text-sm font-medium text-foreground">{t('index.quota_title', { remaining: remainingQuota, max: MAX_DAILY_FREE })}</p>
+                      <p className="text-xs text-muted-foreground">{t('index.quota_desc')}</p>
                     </>
                   )}
                 </div>
@@ -217,7 +222,7 @@ const Index = () => {
                   <AuthDialog
                     trigger={
                       <Button variant="ghost" size="sm">
-                        Upgrade PRO
+                        {t('index.upgrade')}
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     }
@@ -244,10 +249,10 @@ const Index = () => {
         <section className="container mx-auto px-4 py-16 border-t border-border/50">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground mb-4">
-              Por que escolher o PNGify?
+              {t('index.why_title')}
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              A ferramenta mais rápida e confiável para conversão de imagens com IA
+              {t('index.why_desc')}
             </p>
           </div>
 
@@ -255,18 +260,18 @@ const Index = () => {
             {[
               {
                 icon: <Zap className="w-8 h-8" />,
-                title: "Conversão + IA",
-                description: "Converta para PNG e remova o fundo automaticamente com inteligência artificial"
+                title: t('index.feat1'),
+                description: t('index.feat1_desc')
               },
               {
                 icon: <Shield className="w-8 h-8" />,
-                title: "100% Privado",
-                description: "Suas imagens nunca saem do seu dispositivo. Processamento local com IA."
+                title: t('index.feat2'),
+                description: t('index.feat2_desc')
               },
               {
                 icon: <Download className="w-8 h-8" />,
-                title: "Download em Lote",
-                description: "Baixe múltiplas imagens processadas de uma só vez em ZIP"
+                title: t('index.feat3'),
+                description: t('index.feat3_desc')
               }
             ].map((feature, index) => (
               <Card key={index} className="p-6 text-center border-border/50 hover:border-primary/50 transition-all duration-300">

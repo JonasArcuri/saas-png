@@ -1,14 +1,14 @@
 import JSZip from 'jszip';
-import { pipeline, env, type Pipeline } from '@huggingface/transformers';
+import { pipeline, env } from '@huggingface/transformers';
 
 // Configure transformers.js
 // Keep remote models and enable browser caching to avoid re-downloading each session
 env.allowLocalModels = false;
 env.useBrowserCache = true;
 
-let cachedSegmenter: Pipeline | null = null;
+let cachedSegmenter: any | null = null;
 
-async function getSegmenter(): Promise<Pipeline> {
+async function getSegmenter(): Promise<any> {
   if (cachedSegmenter) return cachedSegmenter;
   // Try WebGPU first, then gracefully fall back to WASM
   try {
@@ -68,20 +68,61 @@ function resizeImageIfNeeded(canvas: HTMLCanvasElement, ctx: CanvasRenderingCont
   return false;
 }
 
+async function canvasToPngBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error('Failed to create blob'));
+    }, 'image/png', 1.0);
+  });
+}
+
+async function removeBackgroundCloud(canvasWithImage: HTMLCanvasElement): Promise<Blob> {
+  const token = import.meta.env.VITE_HF_TOKEN;
+  const modelId = import.meta.env.VITE_HF_RMBG_MODEL || 'briaai/RMBG-1.4';
+  if (!token) throw new Error('HF token not configured');
+
+  const inputBlob = await canvasToPngBlob(canvasWithImage);
+  const res = await fetch(`https://api-inference.huggingface.co/models/${modelId}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'image/png',
+      'Accept': 'image/png',
+    },
+    body: inputBlob,
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`HF inference error: ${text}`);
+  }
+  const outBlob = await res.blob();
+  return outBlob;
+}
+
 export const removeBackground = async (imageElement: HTMLImageElement): Promise<Blob> => {
   try {
     console.log('Starting background removal process...');
-    const segmenter = await getSegmenter();
-    
-    // Convert HTMLImageElement to canvas
+    // Prepare canvas with the image (shared for both cloud/local paths)
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
     if (!ctx) throw new Error('Could not get canvas context');
-    
-    // Resize image if needed and draw it to canvas
     const wasResized = resizeImageIfNeeded(canvas, ctx, imageElement);
     console.log(`Image ${wasResized ? 'was' : 'was not'} resized. Final dimensions: ${canvas.width}x${canvas.height}`);
+
+    // Try cloud RMBG if configured, fallback to local model
+    const hasCloud = Boolean(import.meta.env.VITE_HF_TOKEN);
+    if (hasCloud) {
+      try {
+        console.log('Attempting cloud RMBG (Hugging Face Inference API)...');
+        return await removeBackgroundCloud(canvas);
+      } catch (cloudErr) {
+        console.warn('Cloud RMBG failed, falling back to local model:', cloudErr);
+      }
+    }
+
+    const segmenter = await getSegmenter();
     
     // Get image data as base64
     const imageData = canvas.toDataURL('image/jpeg', 0.8);

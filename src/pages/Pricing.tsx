@@ -8,6 +8,7 @@ import AuthDialog from "@/components/AuthDialog";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 const Pricing = () => {
   const plans = [
@@ -53,6 +54,7 @@ const Pricing = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-gradient-bg">
@@ -60,12 +62,8 @@ const Pricing = () => {
       
       <main className="container mx-auto px-4 py-16">
         <div className="text-center space-y-4 mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-            Escolha Seu Plano
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Converta imagens para PNG com velocidade e qualidade profissional
-          </p>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground">{t('pricing.title')}</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">{t('pricing.desc')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -79,16 +77,14 @@ const Pricing = () => {
               } transition-all duration-300 hover:shadow-lg`}
             >
               {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-primary">
-                  Mais Popular
-                </Badge>
+                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-primary">{t('pricing.most_popular')}</Badge>
               )}
 
               <CardHeader className="text-center pb-6">
                 <div className="mx-auto w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center mb-4">
                   {plan.icon}
                 </div>
-                <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                <CardTitle className="text-2xl">{plan.name === 'Gratuito' ? t('pricing.free') : t('pricing.pro')}</CardTitle>
                 <CardDescription className="text-muted-foreground">
                   {plan.description}
                 </CardDescription>

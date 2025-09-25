@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { Github, Mail, Chrome } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 type AuthDialogProps = {
   trigger?: React.ReactNode;
@@ -13,6 +14,7 @@ type AuthDialogProps = {
 
 const AuthDialog = ({ trigger, onSignedIn }: AuthDialogProps) => {
   const { signInWithEmail, signUpWithEmail, signInWithOAuth } = useAuth();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -44,30 +46,30 @@ const AuthDialog = ({ trigger, onSignedIn }: AuthDialogProps) => {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{mode === 'signin' ? 'Entrar' : 'Criar conta'}</DialogTitle>
+          <DialogTitle>{mode === 'signin' ? t('auth.enter') : t('auth.create')}</DialogTitle>
         </DialogHeader>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('auth.email')}</Label>
             <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
+            <Label htmlFor="password">{t('auth.password')}</Label>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
           {error && <p className="text-destructive text-sm">{error}</p>}
           <div className="flex items-center justify-between">
             <Button type="submit" disabled={loading}>
-              {loading ? 'Carregando...' : (mode === 'signin' ? 'Entrar' : 'Criar conta')}
+              {loading ? '...' : (mode === 'signin' ? t('auth.enter') : t('auth.create'))}
             </Button>
             <Button type="button" variant="link" onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}>
-              {mode === 'signin' ? 'Não tem conta? Cadastre-se' : 'Já tem conta? Entrar'}
+              {mode === 'signin' ? t('auth.no_account') : t('auth.have_account')}
             </Button>
           </div>
         </form>
 
         <div className="mt-4 space-y-2">
-          <div className="text-center text-sm text-muted-foreground">ou continue com</div>
+          <div className="text-center text-sm text-muted-foreground">{t('auth.or_continue')}</div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" className="w-full" onClick={() => signInWithOAuth('google')}>
               <Chrome className="w-4 h-4" /> Google

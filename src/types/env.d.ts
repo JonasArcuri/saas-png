@@ -8,6 +8,9 @@ interface ImportMetaEnv {
   readonly VITE_BILLING_CANCEL_URL?: string;
   readonly VITE_PAYMENT_LINK_URL?: string; // removed soon
   readonly VITE_OAUTH_REDIRECT_URL?: string;
+  readonly VITE_HF_TOKEN?: string;
+  readonly VITE_HF_RMBG_MODEL?: string; // default: briaai/RMBG-1.4
+  readonly VITE_ANALYTICS_ENABLED?: string; // 'true' to enable
 }
 
 interface ImportMeta {

@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const Footer = () => {
+  const { t } = useTranslation();
+  const year = new Date().getFullYear();
   return (
     <footer className="border-t border-border/50 bg-background/95 backdrop-blur">
       <div className="container mx-auto px-4 py-12">
@@ -12,24 +15,17 @@ const Footer = () => {
               </div>
               <span className="text-xl font-bold text-foreground">PNGify</span>
             </div>
-            <p className="text-muted-foreground">
-              Converta imagens para PNG e remova fundos automaticamente com IA. 
-              Simples, rápido e grátis.
-            </p>
+            <p className="text-muted-foreground">{t('footer.tagline')}</p>
           </div>
 
           <div>
-            <h3 className="font-semibold text-foreground mb-4">Produto</h3>
+            <h3 className="font-semibold text-foreground mb-4">{t('footer.product')}</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Converter Imagens
-                </Link>
+                <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">{t('footer.convert')}</Link>
               </li>
               <li>
-                <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Planos e Preços
-                </Link>
+                <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">{t('footer.pricing')}</Link>
               </li>
               <li>
                 <span className="text-success">
@@ -40,52 +36,38 @@ const Footer = () => {
           </div>
 
           <div>
-            <h3 className="font-semibold text-foreground mb-4">Suporte</h3>
+            <h3 className="font-semibold text-foreground mb-4">{t('footer.support')}</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Central de Ajuda
-                </a>
+                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">{t('footer.help_center')}</a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Contato
-                </a>
+                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">{t('footer.contact')}</a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Status do Sistema
-                </a>
+                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">{t('footer.status')}</a>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-semibold text-foreground mb-4">Legal</h3>
+            <h3 className="font-semibold text-foreground mb-4">{t('footer.legal')}</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Termos de Uso
-                </a>
+                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">{t('footer.terms')}</a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Política de Privacidade
-                </a>
+                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">{t('footer.privacy')}</a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Cookies
-                </a>
+                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">{t('footer.cookies')}</a>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-border/50 mt-8 pt-8 text-center">
-          <p className="text-muted-foreground">
-            © 2024 PNGify. Todos os direitos reservados.
-          </p>
+          <p className="text-muted-foreground">{t('footer.copyright', { year })}</p>
         </div>
       </div>
     </footer>
